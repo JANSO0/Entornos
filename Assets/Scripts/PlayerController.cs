@@ -50,6 +50,8 @@ public class PlayerController : CharController
     /// </summary>
     protected override void Update()
     {
+        if (!IsOwner) return;
+
         animator.SetFloat("speed", movement.sqrMagnitude);
 
         if (movement.sqrMagnitude > 0.01f)
