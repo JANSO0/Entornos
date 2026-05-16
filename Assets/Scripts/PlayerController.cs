@@ -14,20 +14,38 @@ public class PlayerController : CharController
     /// <summary>
     /// Inicializa controles de entrada y registra el jugador local en el gestor global.
     /// </summary>
+    /// 
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
+        if (!IsOwner)
+        {
+            return;
+        }
+
+        controls.Enable();
+        controls.Player.Attack.performed += onAttack;
+        controls.Player.Move.performed += ctx => movement = ctx.ReadValue<Vector2>();
+        controls.Player.Move.canceled += _ => movement = Vector2.zero;
+
+        if (GameManager.Instance != null)
+            GameManager.Instance.RegisterLocalPlayer(this, uniqueEntity);
+
+        // Dispara eventos iniciales para actualizar el HUD
+        GameEvents.HealthChanged(health);
+        GameEvents.KeysChanged();
+        GameEvents.DiamondsChanged();
+    }
+
     protected override void Awake()
     {
         base.Awake();
         controls = new PlayerControls();
 
-        controls.Player.Move.performed += ctx => movement = ctx.ReadValue<Vector2>();
-        controls.Player.Move.canceled += _ => movement = Vector2.zero;
-
         // ✅ Ocultar hasta que LevelGenerator lo reposicione
-        gameObject.SetActive(false);
+        //gameObject.SetActive(false);
 
         UniqueEntity uniqueEntity = GetComponent<UniqueEntity>();
-        if (GameManager.Instance != null)
-            GameManager.Instance.RegisterLocalPlayer(this, uniqueEntity);
     }
 
     /// <summary>
@@ -37,11 +55,6 @@ public class PlayerController : CharController
     {
         base.Start();
 
-        // Dispara eventos iniciales para actualizar el HUD
-        GameEvents.HealthChanged(health);
-        GameEvents.KeysChanged();
-        GameEvents.DiamondsChanged();
-
         IsAttacking = false;
     }
 
@@ -50,6 +63,7 @@ public class PlayerController : CharController
     /// </summary>
     protected override void Update()
     {
+
         if (!IsOwner) return;
 
         animator.SetFloat("speed", movement.sqrMagnitude);
@@ -66,11 +80,9 @@ public class PlayerController : CharController
     /// <summary>
     /// Activa el mapa de controles y suscribe la acción de ataque.
     /// </summary>
-    private void OnEnable()
-    {
-        controls.Enable();
-        controls.Player.Attack.performed += onAttack;
-    }
+    /// 
+
+    //private void OnEnable(){}
 
     /// <summary>
     /// Desuscribe la acción de ataque y desactiva el mapa de controles.
@@ -152,7 +164,7 @@ public class PlayerController : CharController
         {
             // Aplica el bonus de velocidad del jugador
             moveSpeed *= playerStats.speedBonus;
-            
+
             // Carga stats específicas del jugador
             damageToEnemy = playerStats.attackDamage;
             attackCooldown = playerStats.attackCooldown;

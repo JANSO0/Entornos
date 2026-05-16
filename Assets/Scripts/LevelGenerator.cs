@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Unity.Netcode;
+using UnityEngine;
 using UnityEngine.Tilemaps;
 
 [System.Serializable]
@@ -26,7 +27,7 @@ public class RingSettings
     public float decorativeElementPercentage = 0.05f;
 }
 
-public class LevelGenerator : MonoBehaviour
+public class LevelGenerator : NetworkBehaviour
 {
     [SerializeField] private TilemapFiller tilemapFiller;
 
@@ -55,6 +56,12 @@ public class LevelGenerator : MonoBehaviour
 
     private MapConfig activeConfig => GameManager.Instance?.SelectedMapConfig ?? defaultMapConfig;
 
+
+
+
+    private NetworkVariable<int> mapSeed = new NetworkVariable<int>(0);
+
+
     /// <summary>
     /// Inicializa referencias de escena y suscribe el evento de registro de jugador local.
     /// </summary>
@@ -75,7 +82,7 @@ public class LevelGenerator : MonoBehaviour
     /// <summary>
     /// Garantiza la configuración de mapa activa y ejecuta la generación inicial del nivel.
     /// </summary>
-    private void Start()
+    /*private void Start()
     {
         if (GameManager.Instance != null && GameManager.Instance.SelectedMapConfig == null)
         {
@@ -85,12 +92,57 @@ public class LevelGenerator : MonoBehaviour
 
         generateLevel();
         preparePlayerSpawn();
+    }*/
+
+
+
+    
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
+
+        if (IsServer)
+        {
+            // El servidor inventa una semilla y genera el nivel
+            mapSeed.Value = Random.Range(0, 100000);
+            GenerateMapWithSeed(mapSeed.Value);
+        }
+        else
+        {
+            // El cliente escucha si la semilla cambia para generar su mapa
+            mapSeed.OnValueChanged += (oldValue, newValue) =>
+            {
+                GenerateMapWithSeed(newValue);
+            };
+
+            // Por si acaso la semilla ya había llegado antes de suscribirnos
+            if (mapSeed.Value != 0)
+            {
+                GenerateMapWithSeed(mapSeed.Value);
+            }
+        }
+    }
+    private void GenerateMapWithSeed(int seed)
+    {
+        // Forzamos a Unity a usar esta semilla para todo lo aleatorio
+        Random.InitState(seed);
+
+        // ... Aquí va el código original que llamaba a TilemapFiller para generar la sala del tesoro y los anillos ...
+        // Ejemplo:
+        // ActiveConfig = GameManager.Instance.SelectedMapConfig ?? defaultMapConfig;
+        // generateTreasureRoom();
+        // generateRings();
+        // tryCalculateSpawnPos();
     }
 
-    /// <summary>
-    /// Genera la sala del tesoro y los anillos del mapa.
-    /// </summary>
-    private void generateLevel()
+
+
+
+
+/// <summary>
+/// Genera la sala del tesoro y los anillos del mapa.
+/// </summary>
+private void generateLevel()
     {
         generateTreasureRoom();
         generateRings();

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
+using Unity.Netcode;
 
 public class CharSelectionMenuButtonsHandler : MonoBehaviour
 {
@@ -14,7 +15,10 @@ public class CharSelectionMenuButtonsHandler : MonoBehaviour
     /// </summary>
     public void OnBackButtonClicked()
     {
-        SceneManager.LoadScene(SceneNames.MainMenu);
+        if (NetworkManager.Singleton.IsServer)
+        {
+            NetworkManager.Singleton.SceneManager.LoadScene(SceneNames.MainMenu, LoadSceneMode.Single);
+        }
     }
 
     /// <summary>

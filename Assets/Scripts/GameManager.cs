@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Unity.Netcode;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public static class SceneNames
@@ -25,6 +26,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float delayBeforeScene = 0.5f;
 
     private PlayerGameState playerState;
+
 
     /// <summary>
     /// Inicializa el singleton del juego y sus datos persistentes.
@@ -176,7 +178,10 @@ public class GameManager : MonoBehaviour
         SelectedCharacterStats = selectedCharacter;
         ResetGameData();
 
-        SceneManager.LoadScene(SceneNames.PlaygroundLevel);
+        if (NetworkManager.Singleton.IsServer)
+        {
+            NetworkManager.Singleton.SceneManager.LoadScene(SceneNames.PlaygroundLevel, LoadSceneMode.Single);
+        }
     }
 
     /// <summary>
@@ -213,7 +218,10 @@ public class GameManager : MonoBehaviour
     /// </summary>
     private void loadDeadScene()
     {
-        SceneManager.LoadScene(SceneNames.DeadScene);
+        if (NetworkManager.Singleton.IsServer)
+        {
+            NetworkManager.Singleton.SceneManager.LoadScene(SceneNames.DeadScene, LoadSceneMode.Single);
+        }
     }
 
     /// <summary>
@@ -230,7 +238,10 @@ public class GameManager : MonoBehaviour
     /// </summary>
     private void loadVictoryScene()
     {
-        SceneManager.LoadScene(SceneNames.VictoryScene);
+        if (NetworkManager.Singleton.IsServer)
+        {
+            NetworkManager.Singleton.SceneManager.LoadScene(SceneNames.VictoryScene, LoadSceneMode.Single);
+        }
     }
 
     /// <summary>
@@ -241,6 +252,5 @@ public class GameManager : MonoBehaviour
         Debug.Log($"[GameManager] Jugador muerto. Keys: {GetKeys()}, Diamonds: {GetDiamonds()}, Enemies: {EnemiesKilled}");
     }
 }
-
 
 

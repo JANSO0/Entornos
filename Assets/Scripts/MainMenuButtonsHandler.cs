@@ -2,8 +2,11 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Unity.Netcode.Transports.UTP;
+
 #if UNITY_EDITOR
 using UnityEditor;
+using Unity.Netcode;
 #endif
 
 public class MainMenuButtonsHandler : MonoBehaviour
@@ -34,15 +37,33 @@ public class MainMenuButtonsHandler : MonoBehaviour
     /// <summary>
     /// Navega a la escena de selección de personaje si hay mapa seleccionado.
     /// </summary>
-    public void OnButtonPlayClicked()
-    {
-        if (GameManager.Instance?.SelectedMapConfig == null)
-        {
-            Debug.LogWarning("[MainMenu] No hay mapa seleccionado.");
-            return;
-        }
+    /// 
 
-        SceneManager.LoadScene(SceneNames.CharSelection);
+    public void OnButtonHostClicked()
+    {
+        if (GameManager.Instance?.SelectedMapConfig == null) return;
+
+        // 1. Configuramos IP y Puerto para el Host
+        var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+        transport.SetConnectionData("127.0.0.1", 7778);
+
+        // 2. Arrancamos
+        NetworkManager.Singleton.StartHost();
+        NetworkManager.Singleton.SceneManager.LoadScene(SceneNames.CharSelection, LoadSceneMode.Single);
+    }
+
+    /// <summary>
+    /// Se une a una partida existente como Cliente.
+    /// </summary>
+    public void OnButtonClientClicked()
+    {
+        // 1. Configuramos IP y Puerto para conectarnos al Host
+        var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+        // Si algún día probáis con dos PCs distintos, aquí ponéis la IP local del Host en clase (ej: "192.168.1.50")
+        transport.SetConnectionData("127.0.0.1", 7778);
+
+        // 2. Nos unimos
+        NetworkManager.Singleton.StartClient();
     }
 
     /// <summary>
