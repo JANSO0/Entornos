@@ -43,9 +43,16 @@ public class PlayerController : CharController
         controls = new PlayerControls();
 
         // ✅ Ocultar hasta que LevelGenerator lo reposicione
-        //gameObject.SetActive(false);
+        //sgameObject.SetActive(false);
 
         UniqueEntity uniqueEntity = GetComponent<UniqueEntity>();
+
+        //transform.position = new Vector3(9999f, 9999f, 0f);
+
+        //SpriteRenderer sprite = GetComponent<SpriteRenderer>();
+        //if (sprite != null) sprite.enabled = false;
+
+        if (characterCollider != null) characterCollider.enabled = false;
     }
 
     /// <summary>

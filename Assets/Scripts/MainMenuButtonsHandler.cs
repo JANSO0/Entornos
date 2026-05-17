@@ -45,7 +45,7 @@ public class MainMenuButtonsHandler : MonoBehaviour
 
         // 1. Configuramos IP y Puerto para el Host
         var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
-        transport.SetConnectionData("127.0.0.1", 7778);
+        transport.SetConnectionData("127.0.0.1", 7777);
 
         // 2. Arrancamos
         NetworkManager.Singleton.StartHost();
@@ -60,7 +60,7 @@ public class MainMenuButtonsHandler : MonoBehaviour
         // 1. Configuramos IP y Puerto para conectarnos al Host
         var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
         // Si algún día probáis con dos PCs distintos, aquí ponéis la IP local del Host en clase (ej: "192.168.1.50")
-        transport.SetConnectionData("127.0.0.1", 7778);
+        transport.SetConnectionData("127.0.0.1", 7777);
 
         // 2. Nos unimos
         NetworkManager.Singleton.StartClient();

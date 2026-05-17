@@ -56,9 +56,6 @@ public class LevelGenerator : NetworkBehaviour
 
     private MapConfig activeConfig => GameManager.Instance?.SelectedMapConfig ?? defaultMapConfig;
 
-
-
-
     private NetworkVariable<int> mapSeed = new NetworkVariable<int>(0);
 
 
@@ -103,23 +100,27 @@ public class LevelGenerator : NetworkBehaviour
 
         if (IsServer)
         {
-            // El servidor inventa una semilla y genera el nivel
-            mapSeed.Value = Random.Range(0, 100000);
+            mapSeed.Value = Random.Range(1, 100000);
             GenerateMapWithSeed(mapSeed.Value);
         }
         else
         {
-            // El cliente escucha si la semilla cambia para generar su mapa
-            mapSeed.OnValueChanged += (oldValue, newValue) =>
-            {
-                GenerateMapWithSeed(newValue);
-            };
-
-            // Por si acaso la semilla ya había llegado antes de suscribirnos
             if (mapSeed.Value != 0)
             {
                 GenerateMapWithSeed(mapSeed.Value);
             }
+            else
+            {
+                mapSeed.OnValueChanged += OnSeedChanged;
+            }
+        }
+    }
+    private void OnSeedChanged(int oldValue, int newValue)
+    {
+        if (newValue != 0)
+        {
+            mapSeed.OnValueChanged -= OnSeedChanged;
+            GenerateMapWithSeed(newValue);
         }
     }
     private void GenerateMapWithSeed(int seed)
@@ -127,12 +128,16 @@ public class LevelGenerator : NetworkBehaviour
         // Forzamos a Unity a usar esta semilla para todo lo aleatorio
         Random.InitState(seed);
 
-        // ... Aquí va el código original que llamaba a TilemapFiller para generar la sala del tesoro y los anillos ...
-        // Ejemplo:
-        // ActiveConfig = GameManager.Instance.SelectedMapConfig ?? defaultMapConfig;
-        // generateTreasureRoom();
-        // generateRings();
-        // tryCalculateSpawnPos();
+
+        if (GameManager.Instance != null && GameManager.Instance.SelectedMapConfig == null)
+        {
+            GameManager.Instance.SelectedMapConfig = defaultMapConfig;
+            Debug.Log("[LevelGenerator] Usando MapConfig por defecto.");
+        }
+
+
+        generateLevel();
+        preparePlayerSpawn();
     }
 
 
@@ -360,8 +365,15 @@ private void generateLevel()
     /// </summary>
     private void applySpawnAndCharacter(PlayerController player, Vector3 spawnPos)
     {
-        player.gameObject.SetActive(true);
+        //player.gameObject.SetActive(true);
+
         player.transform.position = spawnPos;
+
+        //SpriteRenderer sprite = player.GetComponent<SpriteRenderer>();
+        //if (sprite != null) sprite.enabled = true;
+        Collider2D col = player.GetComponent<Collider2D>();
+        if (col != null) col.enabled = true;
+
         applySelectedCharacter(player);
     }
 
