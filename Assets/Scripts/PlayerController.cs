@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Unity.Netcode;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerController : CharController
@@ -11,6 +12,8 @@ public class PlayerController : CharController
     public bool IsAttacking { get; private set; } = false;
     public int DamageToEnemy => damageToEnemy;
 
+    [SerializeField] private PlayerStats[] allCharacterStats;
+    
     /// <summary>
     /// Inicializa controles de entrada y registra el jugador local en el gestor global.
     /// </summary>
@@ -18,6 +21,13 @@ public class PlayerController : CharController
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
+
+        if (allCharacterStats != null && allCharacterStats.Length > 0)
+        {
+            int autoIndex = (int)(OwnerClientId % (ulong)allCharacterStats.Length);
+            ApplyAutoCharacter(autoIndex);
+        }
+
         if (!IsOwner)
         {
             return;
@@ -47,12 +57,13 @@ public class PlayerController : CharController
 
         UniqueEntity uniqueEntity = GetComponent<UniqueEntity>();
 
-        //transform.position = new Vector3(9999f, 9999f, 0f);
+        transform.position = new Vector3(0f, 0f, -10f);
 
         //SpriteRenderer sprite = GetComponent<SpriteRenderer>();
         //if (sprite != null) sprite.enabled = false;
 
-        if (characterCollider != null) characterCollider.enabled = false;
+        if (characterCollider != null) 
+            characterCollider.enabled = false;
     }
 
     /// <summary>
@@ -149,7 +160,7 @@ public class PlayerController : CharController
     /// </summary>
     protected override void LoadStats()
     {
-        // ✅ PRIMERO: Intenta cargar desde GameManager (personaje seleccionado)
+        /* ✅ PRIMERO: Intenta cargar desde GameManager (personaje seleccionado)
         if (GameManager.Instance != null && GameManager.Instance.SelectedCharacterStats != null)
         {
             stats = GameManager.Instance.SelectedCharacterStats;
@@ -161,6 +172,7 @@ public class PlayerController : CharController
         {
             Debug.LogWarning("[PlayerController] No hay personaje seleccionado, usando stats por defecto del prefab");
         }
+        */
 
         base.LoadStats();
 
@@ -185,6 +197,31 @@ public class PlayerController : CharController
             moveSpeed *= 1.25f; // Bonus por defecto
         }
     }
+
+    private void ApplyAutoCharacter(int index)
+    {
+        PlayerStats netStats = allCharacterStats[index];
+
+        // 1. Le cambiamos el traje (Animator)
+        if (netStats.animatorController != null)
+        {
+            Animator anim = GetComponent<Animator>();
+            if (anim != null) anim.runtimeAnimatorController = netStats.animatorController;
+        }
+
+        // 2. Le inyectamos las stats reales
+        stats = netStats;
+
+        // 3. Cargamos la velocidad y daño
+        PlayerStats playerStats = stats as PlayerStats;
+        if (playerStats != null)
+        {
+            moveSpeed *= playerStats.speedBonus; 
+            damageToEnemy = playerStats.attackDamage;
+            attackCooldown = playerStats.attackCooldown;
+        }
+    }
+
 
     /// <summary>
     /// Verifica si la salud ha llegado a cero y ejecuta la muerte una sola vez.

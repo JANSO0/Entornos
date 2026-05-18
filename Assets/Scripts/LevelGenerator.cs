@@ -374,7 +374,7 @@ private void generateLevel()
         Collider2D col = player.GetComponent<Collider2D>();
         if (col != null) col.enabled = true;
 
-        applySelectedCharacter(player);
+        //applySelectedCharacter(player);
     }
 
     /// <summary>

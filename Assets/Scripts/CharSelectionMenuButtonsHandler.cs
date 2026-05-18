@@ -19,9 +19,6 @@ public class CharSelectionMenuButtonsHandler : MonoBehaviour
 
         int safeIndex = (int)(myId % (ulong)characterStats.Length);
 
-        if (!NetworkManager.Singleton.IsServer)
-
-
         if (NetworkManager.Singleton.IsServer)
         {
             startButton.SetActive(true);
